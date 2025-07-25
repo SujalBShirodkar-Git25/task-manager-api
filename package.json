@@ -1,0 +1,18 @@
+{
+  "name": "task-manager-api",
+  "version": "1.0.0",
+  "description": "My first self project to develop a task manager api from scratch",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "task-manager",
+    "nodejs",
+    "express",
+    "mongodb",
+    "api"
+  ],
+  "author": "Sujal Shirodkar",
+  "license": "ISC"
+}
