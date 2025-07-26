@@ -2,9 +2,10 @@
   "name": "task-manager-api",
   "version": "1.0.0",
   "description": "My first self project to develop a task manager api from scratch",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
     "task-manager",
@@ -14,5 +15,8 @@
     "api"
   ],
   "author": "Sujal Shirodkar",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
 }
