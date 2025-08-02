@@ -34,4 +34,55 @@ const createTask = asyncHandler(async(req,res) => {
   );
 });
 
-export {createTask};
+const getAllTask = asyncHandler(async(req,res) => {
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      req.user.tasks,
+      "Tasks fetched successfully"
+    )
+  );
+});
+
+const getTask = asyncHandler(async(req,res) => {
+  const taskId = req.params?.id;
+
+  if(!taskId) throw new ApiError(400,"Task id missing !!");
+
+  const task = await Task.findById(taskId);
+
+  if(!task) throw new ApiError(400,"Invalid task id !!");
+
+  res.status(200).json(
+    new ApiResponse(200,task,"Task fetched successfully")
+  );
+});
+
+const updateTask = asyncHandler(async(req,res) => {
+  const taskId = req.params.id;
+  const {title,description,status,dueDate} = req.body;
+  
+  if(!taskId) throw new ApiError(400,"Task id missing !!");
+
+  const updates={};
+  if(title) updates.title=title; 
+  if(description) updates.description=description; 
+  if(status) updates.status=status; 
+  if(dueDate) updates.dueDate=dueDate;
+
+  const task = await Task.findByIdAndUpdate(
+    taskId,
+    {
+      $set: updates
+    },
+    {new: true}
+  );
+
+  if(!task) throw new ApiError(400,"Invalid task id !!");
+
+  res.status(200).json(
+    new ApiResponse(200,task,"Task updated successfully")
+  );
+});
+
+export {createTask,getAllTask,getTask,updateTask};
