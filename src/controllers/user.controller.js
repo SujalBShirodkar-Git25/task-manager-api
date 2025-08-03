@@ -176,4 +176,80 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
   }
 });
 
-export {registerUser,loginUser,logoutUser,refreshAccessToken};
+const resetPassword = asyncHandler(async(req,res) => {
+  const {oldPassword,newPassword} = req.body;
+  const {user} = req;
+
+  if(!oldPassword || !newPassword) throw new ApiError(400,"Both old and new passwords are needed !!");
+
+  const checkPassword = await user.isPasswordCorrect(oldPassword);
+
+  if(!checkPassword) throw new ApiError(400,"Old password is not correct !!");
+
+  user.password = newPassword;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200,{},"Password reset done successfully"));
+});
+
+const getUser = asyncHandler(async(req,res) => {
+  const currentUser = await User.findById(req.user._id).select("-password -refreshToken");
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      currentUser,
+      "User fetched successfully"
+    )
+  );
+});
+
+const updateUser = asyncHandler(async(req,res) => {
+  const {username,email} = req.body;
+
+  if(!username && !email) throw new ApiError(400,"Either username or email should be present !!");
+
+  const existedUser = await User.findOne({
+    $or: [{username},{email}]
+  });
+
+  if(existedUser) throw new ApiError(400,"User already exists with given username or password !!");
+
+  const updates = {};
+  if(username) updates.username = username;
+  if(email) updates.email = email;
+
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: updates
+    },
+    {new: true}
+  ).select("-password -refreshToken");
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      updatedUser,
+      "User updated successfully"
+    )
+  );
+});
+
+const deleteUser = asyncHandler(async(req,res) => {
+  const deletedUser = await User.findByIdAndDelete(req.user._id).select("-password -refreshToken");
+
+  const options = {
+    httpOnly: true,
+    secure: true
+  };
+
+  res.status(200)
+  .clearCookie("accessToken",options)
+  .clearCookie("refreshToken",options)
+  .json(
+    new ApiResponse(200,deletedUser,"User deleted successfully")
+  );
+});
+
+export {registerUser,loginUser,logoutUser,refreshAccessToken,resetPassword,getUser,updateUser,deleteUser};
