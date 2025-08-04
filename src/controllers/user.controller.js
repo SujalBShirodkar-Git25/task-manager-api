@@ -40,18 +40,18 @@ const registerUser = asyncHandler(async (req,res) => {
   });
 
   //if existed user is present throw error
-  if(existedUser) throw new ApiError(400,"User already exists !!");
+  if(existedUser) throw new ApiError(409,"User already exists !!");
 
   //creating user
   const user = await User.create({username,email,password});
 
   const createdUser = await User.findById(user._id).select("-password");
 
-  if(!createdUser) throw new ApiError(400,"Something went wrong while registering the user !!");
+  if(!createdUser) throw new ApiError(500,"Something went wrong while registering the user !!");
 
   //send response
-  return res.status(200).json(
-    new ApiResponse(200,createdUser,"User registered successfully")
+  return res.status(201).json(
+    new ApiResponse(201,createdUser,"User registered successfully")
   );
 });
 
@@ -64,9 +64,9 @@ const loginUser = asyncHandler(async (req,res) => {
     $or: [{username},{email}]
   });
 
-  if(!user) throw new ApiError(400,"User not found !!");
+  if(!user) throw new ApiError(404,"User not found !!");
 
-  if(!(await user.isPasswordCorrect(password))) throw new ApiError(400,"Password is incorrect !!");
+  if(!(await user.isPasswordCorrect(password))) throw new ApiError(401,"Password is incorrect !!");
 
   //generating access token
   const accessToken = await generateAccessTokens(user);
@@ -98,7 +98,7 @@ const loginUser = asyncHandler(async (req,res) => {
 });
 
 const logoutUser = asyncHandler(async (req,res) => {
-  const user = await User.findByIdAndUpdate(
+  await User.findByIdAndUpdate(
     req.user._id,
     {
       $unset: {
@@ -126,16 +126,16 @@ const logoutUser = asyncHandler(async (req,res) => {
 const refreshAccessToken = asyncHandler(async (req,res) => {
   const incomingRefreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
-  if(!incomingRefreshToken) throw new ApiError(400,"Unauthorized Access !!");
+  if(!incomingRefreshToken) throw new ApiError(401,"Unauthorized Access !!");
 
   try {
     const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
 
     const user = await User.findById(decodedToken?._id);
 
-    if(!user) throw new ApiError(400,"Invalid refresh token, please login again !!");
+    if(!user) throw new ApiError(401,"Invalid refresh token, please login again !!");
 
-    if(incomingRefreshToken !== user?.refreshToken) throw new ApiError(400,"Invalid refresh token, please login again !!");
+    if(incomingRefreshToken !== user?.refreshToken) throw new ApiError(401,"Invalid refresh token, please login again !!");
 
     const newAccessToken = await generateAccessTokens(user);
 
@@ -163,12 +163,12 @@ const refreshAccessToken = asyncHandler(async (req,res) => {
       secure: true
     };
 
-    res.status(400)
+    res.status(401)
     .clearCookie("accessToken",options)
     .clearCookie("refreshToken",options)
     .json(
       new ApiResponse(
-        400,
+        401,
         {},
         "Refresh token is expired, please login again !!"
       )
@@ -213,7 +213,7 @@ const updateUser = asyncHandler(async(req,res) => {
     $or: [{username},{email}]
   });
 
-  if(existedUser) throw new ApiError(400,"User already exists with given username or password !!");
+  if(existedUser) throw new ApiError(409,"User already exists with given username or password !!");
 
   const updates = {};
   if(username) updates.username = username;

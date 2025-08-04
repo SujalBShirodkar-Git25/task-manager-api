@@ -17,7 +17,7 @@ const createTask = asyncHandler(async(req,res) => {
     owner: req.user._id
   });
 
-  if(!task) throw new ApiError(400,"Error while creating task !!");
+  if(!task) throw new ApiError(500,"Error while creating task !!");
 
   await User.findByIdAndUpdate(
     req.user._id,
@@ -29,8 +29,8 @@ const createTask = asyncHandler(async(req,res) => {
     {new: true}
   );
 
-  res.status(200).json(
-    new ApiResponse(200,task,"Task created successfully !!")
+  res.status(201).json(
+    new ApiResponse(201,task,"Task created successfully !!")
   );
 });
 
@@ -51,7 +51,7 @@ const getTask = asyncHandler(async(req,res) => {
 
   const task = await Task.findById(taskId);
 
-  if(!task) throw new ApiError(400,"Invalid task id !!");
+  if(!task) throw new ApiError(404,"Task not found, Invalid task id !!");
 
   res.status(200).json(
     new ApiResponse(200,task,"Task fetched successfully")
@@ -78,7 +78,7 @@ const updateTask = asyncHandler(async(req,res) => {
     {new: true}
   );
 
-  if(!task) throw new ApiError(400,"Invalid task id !!");
+  if(!task) throw new ApiError(404,"Task not found, Invalid task id !!");
 
   res.status(200).json(
     new ApiResponse(200,task,"Task updated successfully")
@@ -92,7 +92,7 @@ const deleteTask = asyncHandler(async(req,res) => {
 
   const deletedTask = await Task.findByIdAndDelete(taskId);
 
-  if(!deletedTask) throw new ApiError(400,"Task id not found !!");
+  if(!deletedTask) throw new ApiError(404,"Task not found, Invalid task id !!");
 
   res.status(200).json(
     new ApiResponse(200,deletedTask,"Task deleted successfully")
